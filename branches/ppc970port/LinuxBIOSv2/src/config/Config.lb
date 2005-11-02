@@ -1,0 +1,168 @@
+## This is Architecture independant part of the makefile
+
+uses HAVE_OPTION_TABLE
+
+makedefine CPP:= $(CC) -x assembler-with-cpp -DASSEMBLY -E
+makedefine LIBGCC_FILE_NAME := $(shell $(CC) -print-libgcc-file-name)
+makedefine GCC_INC_DIR := $(shell $(CC) -print-search-dirs | sed -ne "s/install: \(.*\)/\1include/gp")
+
+makedefine CPPFLAGS := -I$(TOP)/src/include -I$(TOP)/src/arch/$(ARCH)/include -I$(GCC_INC_DIR) $(CPUFLAGS)
+makedefine CFLAGS := $(CPU_OPT) $(CPPFLAGS) -Os -nostdinc -nostdlib -fno-builtin  -Wall
+
+makedefine HOSTCFLAGS:= -Os -Wall
+
+makerule ldscript.ld   
+	depends	"ldoptions $(LDSUBSCRIPTS-1)" 
+	action	"echo \"INCLUDE ldoptions\" > $@ ; for file in $(LDSUBSCRIPTS-1) ; do echo \"INCLUDE $$file\" >> $@ ; done"
+end
+
+#makerule cpuflags   
+#	depends	"Makefile.settings" 
+#	action	"perl -e 'print \"CPUFLAGS :=\n\"; foreach $$var (split(\" \", $$ENV{VARIABLES})) { if (exists($$ENV{$$var})) { print \"CPUFLAGS += -D$$var\" . (length($$ENV{$$var})?\"=\x27$$ENV{$$var}\x27\":\"\") .\"\n\"} else { print \"CPUFLAGS += -U$$var\n\"} }' > $@"
+#end
+
+#makerule ldoptions   
+#	depends	"Makefile.settings" 
+#	action	"perl -e 'foreach $$var (split(\" \", $$ENV{VARIABLES})) { if ($$ENV{$$var} =~ m/^(0x[0-9a-fA-F]+|0[0-7]+|[0-9]+)$$/) { print \"$$var = $$ENV{$$var};\n\"; }}' > $@"
+#end
+
+makerule linuxbios.strip  
+	depends	"linuxbios" 
+	action	"$(OBJCOPY) -O binary linuxbios linuxbios.strip"
+end
+
+makerule linuxbios_ram.o
+	depends	"$(DRIVER) linuxbios.a $(LIBGCC_FILE_NAME)" 
+	action	"$(CC) -nostdlib -r -o $@ c_start.o $(DRIVER) linuxbios.a $(LIBGCC_FILE_NAME)"
+end
+
+makerule linuxbios_ram
+	depends	"linuxbios_ram.o $(TOP)/src/config/linuxbios_ram.ld ldoptions" 
+	action	"$(CC) -nostdlib -nostartfiles -static -o $@ -T $(TOP)/src/config/linuxbios_ram.ld linuxbios_ram.o"
+	action 	"$(CROSS_COMPILE)nm -n linuxbios_ram | sort > linuxbios_ram.map"
+end
+
+##
+## By default compress the part of linuxbios that runs from RAM
+##
+makedefine LINUXBIOS_RAM-$(CONFIG_COMPRESS):=linuxbios_ram.nrv2b
+makedefine LINUXBIOS_RAM-$(CONFIG_UNCOMPRESSED):=linuxbios_ram.bin
+
+makerule linuxbios_ram.bin 
+	depends	"linuxbios_ram" 
+	action	"$(OBJCOPY) -O binary $< $@"
+end
+
+makerule linuxbios_ram.nrv2b 
+	depends	"linuxbios_ram.bin nrv2b" 
+	action	"./nrv2b e $< $@"
+end
+
+makerule linuxbios_ram.rom
+	depends	"$(LINUXBIOS_RAM-1)" 
+	action	"cp $(LINUXBIOS_RAM-1) linuxbios_ram.rom"
+end
+
+makerule linuxbios   
+	depends	"crt0.o $(INIT-OBJECTS) linuxbios_ram.rom ldscript.ld"
+	action	"$(CC) -nostdlib -nostartfiles -static -o $@ -T ldscript.ld crt0.o $(INIT-OBJECTS)"
+	action	"$(CROSS_COMPILE)nm -n linuxbios | sort > linuxbios.map"
+end
+
+makerule linuxbios.a   
+	depends	"$(OBJECTS)" 
+	action	"rm -f linuxbios.a"
+	action	"ar cr linuxbios.a $(OBJECTS)"
+end
+
+#makerule crt0.S   
+#	depends	"$(CRT0)" 
+#	action		"cp $< $@"
+#end
+
+# the buildrom tool
+makerule buildrom 
+	depends	"$(TOP)/util/buildrom/buildrom.c" 
+	action	"$(HOSTCC) -o $@ $<"
+end
+
+# Force crt0.s (which has build time version code in it to rebuild every time)
+makedefine .PHONY : crt0.s
+makerule crt0.s   
+	depends	"crt0.S $(CRT0_INCLUDES)" 
+	action	"@echo \"$(CPP) ... $< > $@ \""
+	action	"$(CPP) $(CPPFLAGS) -I. -I$(TOP)/src  $< > $@.new && mv $@.new $@"
+end
+
+makerule crt0.o  
+	depends	"crt0.s" 
+	action	"@echo $(CC) ... -o $@ $<"
+	action	"@$(CC) -c $(CPU_OPT) -o $@ $<"
+end
+
+makerule etags   
+	depends	"$(SOURCES)" 
+	action	"etags $(SOURCES)"
+end
+makerule tags   
+	depends	"$(SOURCES)" 
+	action	"ctags $(SOURCES)"
+end
+makerule documentation   
+	depends	"$(SOURCES)" 
+	action	"doxygen LinuxBIOSDoc.config"
+end
+
+makerule ./romcc   
+	depends	"$(TOP)/util/romcc/romcc.c" 
+	action	"$(HOSTCC) -g $(HOSTCFLAGS) $< -o $@"
+end
+
+makerule build_opt_tbl   
+	depends	"$(TOP)/util/options/build_opt_tbl.c $(TOP)/src/include/pc80/mc146818rtc.h $(TOP)/src/include/boot/linuxbios_tables.h Makefile.settings Makefile"
+	action	"$(HOSTCC) $(HOSTCFLAGS) $(CPUFLAGS) $< -o $@" 
+end
+
+#makerule /$(TARGET_DIR)/option_table.c
+#	depends	"build_opt_tbl $(MAINBOARD)/cmos.layout" 
+#	action	"./build_opt_tbl -b  --config $(MAINBOARD)/cmos.layout"
+#end
+
+makerule option_table.c
+	depends	"build_opt_tbl $(MAINBOARD)/cmos.layout" 
+	action	"./build_opt_tbl -b  --config $(MAINBOARD)/cmos.layout --header option_table.h"
+end
+
+makerule option_table.h
+	depends	"build_opt_tbl $(MAINBOARD)/cmos.layout" 
+	action	"./build_opt_tbl -b  --config $(MAINBOARD)/cmos.layout --header option_table.h"
+end
+
+if HAVE_OPTION_TABLE
+object ./option_table.o 
+#special rule
+#makerule option_table.o 
+#	depends	"option_table.c" 
+#	action	"$(CC) -c $(CFLAGS) -o $@ $<"
+#end
+# object option_table.o 
+end
+
+makerule clean  
+	action	"rm -f linuxbios.* *~"
+	action	"rm -f linuxbios"
+	action	"rm -f ldscript.ld"
+	action	"rm -f a.out *.s *.l *.o *.E *.inc"
+	action	"rm -f TAGS tags romcc*"
+	action	"rm -f docipl buildrom* chips.c *chip.c linuxbios_ram* linuxbios_pay*"
+	action	"rm -f build_opt_tbl* nrv2b* option_table.c crt0.S"
+end
+
+# do standard config files that the user need not specify
+# for now, this is just 'lib', but it may be more later. 
+dir /lib
+dir /console
+dir /stream
+dir /devices
+dir /pc80
+dir /boot

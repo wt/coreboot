@@ -1,0 +1,15 @@
+uses HAVE_INIT_TIMER
+uses HAVE_MOVNTI
+default HAVE_INIT_TIMER=1
+default HAVE_MOVNTI=1
+dir /cpu/x86/tsc
+dir /cpu/x86/fpu
+dir /cpu/x86/mmx
+dir /cpu/x86/sse
+dir /cpu/x86/lapic
+dir /cpu/x86/cache
+dir /cpu/x86/pae
+dir /cpu/amd/mtrr
+dir /cpu/amd/dualcore
+driver model_fxx_init.o
+object apic_timer.o

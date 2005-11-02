@@ -1,0 +1,16 @@
+uses CONFIG_CHIP_NAME
+uses AGP_APERTURE_SIZE
+default AGP_APERTURE_SIZE=0x4000000
+
+if CONFIG_CHIP_NAME
+	config chip.h
+end
+
+object northbridge.o
+driver misc_control.o
+
+makerule raminit_test
+	depends "$(TOP)/src/northbridge/amd/amdk8/raminit_test.c"
+	depends "$(TOP)/src/northbridge/amd/amdk8/raminit.c"
+	action "$(HOSTCC) $(HOSTCFLAGS) $(CPUFLAGS) -Wno-unused-function -I$(TOP)/src/include -g  $< -o $@"
+end

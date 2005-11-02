@@ -1,0 +1,34 @@
+# the IBM E325
+# This will make a target directory of ./e325
+
+target e325
+
+mainboard ibm/e325
+
+#
+###
+### Compute the start location and size size of
+### The linuxBIOS bootloader.
+###
+
+#
+# Arima hdama
+romimage "normal"
+	option USE_FALLBACK_IMAGE=0
+	option ROM_IMAGE_SIZE=0x12000
+	option LINUXBIOS_EXTRA_VERSION=".0Normal"
+#	payload ../../filo.elf
+	payload ../../../payloads/filo.elf
+end
+
+romimage "fallback" 
+	option USE_FALLBACK_IMAGE=1
+	option ROM_IMAGE_SIZE=0x12000
+	option LINUXBIOS_EXTRA_VERSION=".0Fallback"
+#	payload ../../filo.elf
+	payload ../../../payloads/filo.elf
+# use this to test a build if you don't have the etherboot
+#	payload /etc/hosts
+end
+
+buildrom ./linuxbios.rom ROM_SIZE "normal" "fallback"

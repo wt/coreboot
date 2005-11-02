@@ -1,0 +1,10 @@
+ldscript init/ldscript.lb
+
+makerule linuxbios.rom 
+	depends	"linuxbios" 
+	action	"cp $< $@"
+end
+
+dir init
+dir lib
+dir boot

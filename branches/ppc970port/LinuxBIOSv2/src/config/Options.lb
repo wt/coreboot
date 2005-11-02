@@ -1,0 +1,852 @@
+#######################################################
+#
+# Main options file for LinuxBIOS
+#
+# Each option used by a part must be defined in
+# this file. The format for options is:
+#
+#   define <name> 
+#	default <expr> | {<expr>} | "<string>" | none
+#	format "<string>"
+#	export always | used | never
+#	comment "<string>"
+#   end
+#
+# where 
+#
+#   <name> is the name of the option
+#   <expr> is a numeric expression
+#   <string> is a string
+#
+# Either a default value or 'default none' must
+# be specified for every option. An option
+# specified as 'default none' will not be exported
+# (i.e. will remain undefined) unless it has
+# been assigned a value.
+#
+# Option values can be an immediate expression that 
+# evaluates to a numeric value, a delayed expression 
+# (surrounded by curley braces), or a string 
+# (surrounded by double quotes.)
+#
+# Immediate expressions are evaluated at the time an
+# option is defined or set and the numeric result 
+# becomes the value of the option.
+#
+# Delayed expression are evaluated at the time the 
+# option is used, either in another expression or 
+# when being exported.
+#
+# String values will have the double quotes removed 
+# automatically. 
+#
+# Format strings determine the print format that is 
+# used when exporting options. The default format
+# is "%s" for strings and "%d" for numbers.
+#
+# Exported options generate entries in the 
+# Makefile.settings file. Options can be always 
+# exported, exported only if used, or never exported.
+#
+# A comment string must be supplied for every option.
+#
+#######################################################
+
+###############################################
+# Architecture options
+###############################################
+
+define ARCH
+	default "i386"
+	export always
+	comment "Default architecture is i386, options are alpha and ppc"
+end
+define HAVE_MOVNTI
+	default 0
+	export always
+	comment "This cpu supports the MOVNTI directive"
+end
+
+###############################################
+# Build options
+###############################################
+
+define CROSS_COMPILE
+	default ""
+	export always
+	comment "Cross compiler prefix"
+end
+define CC
+	default "$(CROSS_COMPILE)gcc"
+	export always
+	comment "Target C Compiler"
+end
+define HOSTCC
+	default "gcc"
+	export always
+	comment "Host C Compiler"
+end
+define CPU_OPT
+	default none
+	export used
+	comment "Additional per-cpu CFLAGS"
+end
+define OBJCOPY
+	default "$(CROSS_COMPILE)objcopy --gap-fill 0xff"
+	export always
+	comment "Objcopy command"
+end
+define LINUXBIOS_VERSION
+	default "1.1.8"
+	export always
+	format "\"%s\""
+	comment "LinuxBIOS version"
+end
+define LINUXBIOS_EXTRA_VERSION
+        default ""
+        export used
+	format "\"%s\""
+        comment "LinuxBIOS extra version"
+end
+define LINUXBIOS_BUILD
+	default "$(shell date)"
+	export always
+	format "\"%s\""
+	comment "Build date"
+end
+define LINUXBIOS_COMPILE_TIME
+	default "$(shell date +%T)"
+	export always
+	format "\"%s\""
+	comment "Build time"
+end
+define LINUXBIOS_COMPILE_BY
+	default "$(shell whoami)"
+	export always
+	format "\"%s\""
+	comment "Who build this image"
+end
+define LINUXBIOS_COMPILE_HOST
+	default "$(shell hostname)"
+	export always
+	format "\"%s\""
+	comment "Build host"
+end
+
+define LINUXBIOS_COMPILE_DOMAIN
+	default "$(shell dnsdomainname)"
+	export always
+	format "\"%s\""
+	comment "Build domain name"
+end
+define LINUXBIOS_COMPILER
+	default "$(shell $(CC) $(CFLAGS) -v 2>&1 | tail -n 1)"
+	export always
+	format "\"%s\""
+	comment "Build compiler"
+end
+define LINUXBIOS_LINKER
+	default "$(shell  $(CC) -Wl,-v 2>&1 | grep version | tail -n 1)"
+	export always
+	format "\"%s\""
+	comment "Build linker"
+end
+define LINUXBIOS_ASSEMBLER
+	default "$(shell  touch dummy.s ; $(CC) -c -Wa,-v dummy.s 2>&1; rm -f dummy.s dummy.o )"
+	export always
+	format "\"%s\""
+	comment "Build assembler"
+end
+define CONFIG_CHIP_CONFIGURE
+	default 0
+	export used
+	comment "Use new chip_configure method for configuring (non-pci) devices"
+end
+define CONFIG_USE_INIT
+	default 0
+	export always
+	comment "Use stage 1 initialization code"
+end
+
+###############################################
+# ROM image options
+###############################################
+
+define HAVE_FALLBACK_BOOT
+	format "%d"
+	default 0
+	export always
+	comment "Set if fallback booting required"
+end
+define USE_FALLBACK_IMAGE
+	format "%d"
+	default 0
+	export used
+	comment "Set to build a fallback image"
+end
+define FALLBACK_SIZE
+	default 65536
+	format "0x%x"
+	export used
+	comment "ROM_SECTION_SIZE to use for the fallback build."
+end
+define ROM_SIZE
+	default none
+	format "0x%x"
+	export used
+	comment "Total number of bytes allocated for normal and fallback LinuxBIOS images and payloads. Note that the fallback image goes at the end of the ROM, and the normal image at the beginning."
+end
+define ROM_IMAGE_SIZE
+	default 65535
+	format "0x%x"
+	export always
+	comment "Maximum number of bytes allowed for a LinuxBIOS image. Does not include the payload."
+end
+define ROM_SECTION_SIZE
+	default {FALLBACK_SIZE}
+	format "0x%x"
+	export used
+	comment "Default rom section size. Normally, this is calculated in mainboard Config.lb and varies between the normal and fallback builds."
+end
+define ROM_SECTION_OFFSET
+	default {ROM_SIZE - FALLBACK_SIZE}
+	format "0x%x"
+	export used
+	comment "Number of bytes from the beginning of the ROM to the start of the section containing this build (normal or fallback). Normally, this is calculated in mainboard Config.lb."
+end
+define PAYLOAD_SIZE
+	default {ROM_SECTION_SIZE - ROM_IMAGE_SIZE}
+	format "0x%x"
+	export always
+	comment "Maximum number of bytes allowed for a payload. Normally, this is calculated as above."
+end
+define _ROMBASE
+	default {PAYLOAD_SIZE}
+	format "0x%x"
+	export always
+	comment "Base address of LinuxBIOS in ROM"
+end
+define _ROMSTART
+	default none
+	format "0x%x"
+	export used
+	comment "Start address of LinuxBIOS in ROM"
+end
+define _RESET
+	default {_ROMBASE}
+	format "0x%x"
+	export always
+	comment "Hardware reset vector address"
+end
+define _EXCEPTION_VECTORS
+	default {_ROMBASE+0x100}
+	format "0x%x"
+	export always
+	comment "Address of exception vector table"
+end
+define STACK_SIZE
+	default 0x2000
+	format "0x%x"
+	export always
+	comment "Default stack size"
+end
+define HEAP_SIZE
+	default 0x2000
+	format "0x%x"
+	export always
+	comment "Default heap size"
+end
+define _RAMBASE
+	default none
+	format "0x%x"
+	export always
+	comment "Base address of LinuxBIOS in RAM"
+end
+define _RAMSTART
+	default none
+	format "0x%x"
+	export used
+	comment "Start address of LinuxBIOS in RAM"
+end
+define USE_DCACHE_RAM
+	default 0
+	export always
+	comment "Use data cache as temporary RAM if possible"
+end
+define DCACHE_RAM_BASE
+	default none
+	format "0x%x"
+	export used
+	comment "Base address of data cache when using it for temporary RAM"
+end
+define DCACHE_RAM_SIZE
+	default none
+	format "0x%x"
+	export used
+	comment "Size of data cache when using it for temporary RAM"
+end
+define XIP_ROM_BASE
+	default 0
+	format "0x%x"
+	export used
+	comment "Start address of area to cache during LinuxBIOS execution directly from ROM"
+end
+define XIP_ROM_SIZE
+	default 0
+	format "0x%x"
+	export used
+	comment "Size of area to cache during LinuxBIOS execution directly from ROM"
+end
+define CONFIG_COMPRESS
+	default 1
+	export always
+	comment "Set for compressed image"
+end
+define CONFIG_UNCOMPRESSED
+	format "%d"
+	default {!CONFIG_COMPRESS}
+	export always
+	comment "Set for uncompressed image"
+end
+define CONFIG_LB_MEM_TOPK
+	format "%d"
+	default 1024
+	export always
+	comment "Kilobytes of memory to initialized before executing code from RAM"
+end
+define HAVE_OPTION_TABLE
+	default 0
+	export always
+	comment "Export CMOS option table"
+end
+define USE_OPTION_TABLE
+	format "%d"
+	default {HAVE_OPTION_TABLE && !USE_FALLBACK_IMAGE}
+	export always
+	comment "Use option table"
+end
+
+###############################################
+# CMOS variable options
+###############################################
+define LB_CKS_RANGE_START
+	default 49
+	format "%d"
+	export always
+	comment "First CMOS byte to use for LinuxBIOS options"
+end
+define LB_CKS_RANGE_END
+	default 125
+	format "%d"
+	export always
+	comment "Last CMOS byte to use for LinuxBIOS options"
+end
+define LB_CKS_LOC
+	default 126
+	format "%d"
+	export always
+	comment "Pair of bytes to use for CMOS checksum"
+end
+
+
+###############################################
+# Build targets
+###############################################
+
+define CRT0
+	default "$(TOP)/src/arch/$(ARCH)/init/crt0.S.lb"
+	export always
+	comment "Main initialization target"
+end
+
+###############################################
+# Debugging/Logging options
+###############################################
+
+define DEBUG
+	default 1
+	export always
+	comment "Enable debugging code"
+end
+define CONFIG_CONSOLE_VGA
+	default 0
+	export always
+	comment "Log messages to VGA"
+end
+define CONFIG_CONSOLE_BTEXT
+        default 0
+        export always
+        comment "Log messages to btext fb console"
+end
+define CONFIG_CONSOLE_LOGBUF
+	default 0
+	export always
+	comment "Log messages to buffer"
+end
+define CONFIG_CONSOLE_SROM
+	default 0
+	export always
+	comment "Log messages to SROM console"
+end
+define CONFIG_CONSOLE_SERIAL8250
+	default 0
+	export always
+	comment "Log messages to 8250 uart based serial console"
+end
+define DEFAULT_CONSOLE_LOGLEVEL
+	default 7
+	export always
+	comment "Console will log at this level unless changed"
+end
+define MAXIMUM_CONSOLE_LOGLEVEL
+	default 8
+	export always
+ 	comment "Error messages up to this level can be printed"
+end
+define CONFIG_SERIAL_POST
+	default 0
+	export always
+	comment "Enable SERIAL POST codes"
+end
+define NO_POST
+	default none
+	export used
+	comment "Disable POST codes"
+end
+define TTYS0_BASE
+	default 0x3f8
+	format "0x%x"
+	export always
+	comment "Base address for 8250 uart for the serial console"
+end
+define TTYS0_BAUD
+	default 115200
+	export always
+	comment "Default baud rate for serial console"
+end
+define TTYS0_DIV
+	default none
+	format "%d"
+	export used
+	comment "Allow UART divisor to be set explicitly"
+end
+define TTYS0_LCS
+	default 0x3
+	format "0x%x"
+	export always
+	comment "Default flow control settings for the 8250 serial console uart"
+end
+	
+###############################################
+# Mainboard options
+###############################################
+
+define MAINBOARD
+	default "Mainboard_not_set"
+	export always
+	comment "Mainboard name"
+end
+define MAINBOARD_PART_NUMBER
+	default "Part_number_not_set"
+	export always
+	format "\"%s\""
+	comment "Part number of mainboard"
+end
+define MAINBOARD_VENDOR
+	default "Vendor_not_set"
+	export always
+	format "\"%s\""
+	comment "Vendor of mainboard"
+end
+define MAINBOARD_PCI_SUBSYSTEM_VENDOR_ID
+	default 0
+	export always
+	comment "PCI Vendor ID of mainboard manufacturer"
+end
+define MAINBOARD_PCI_SUBSYSTEM_DEVICE_ID
+	default 0
+	format "0x%x"
+	export always
+	comment "PCI susbsystem device id assigned my mainboard manufacturer"
+end
+define MAINBOARD_POWER_ON_AFTER_POWER_FAIL
+	default none
+	export used
+	comment "Default power on after power fail setting"
+end
+define CONFIG_SYS_CLK_FREQ
+	default none
+	export used
+	comment "System clock frequency in MHz"
+end
+
+###############################################
+# SMP options
+###############################################
+
+define CONFIG_SMP
+	default 0
+	export always
+	comment "Define if we support SMP"
+end
+define CONFIG_MAX_CPUS
+        default 1
+        export always
+        comment "Maximum CPU count for this machine"
+end
+define CONFIG_MAX_PHYSICAL_CPUS
+        default 1
+        export always
+        comment "Maximum physical CPU count for this machine"
+end
+define CONFIG_LOGICAL_CPUS
+	default 0
+	export always
+	comment "Should multiple cpus per die be enabled?"
+end
+define HAVE_MP_TABLE
+	default none
+	export used
+	comment "Define to build an MP table"
+end
+define SERIAL_CPU_INIT
+        default 1
+        export always
+        comment "Serialize CPU init"
+end
+
+###############################################
+# Boot options
+###############################################
+
+define CONFIG_IDE_STREAM
+	default 0
+	export always
+	comment "Boot from IDE device"
+end
+define CONFIG_ROM_STREAM
+	default 0
+	export always
+	comment "Boot image is located in ROM" 
+end
+define CONFIG_ROM_STREAM_START
+	default {0xffffffff - ROM_SIZE + ROM_SECTION_OFFSET + 1}
+	format "0x%x"
+	export always
+	comment "Memory address of this (normal or fallback) build's payload in ROM. Normally, this is calculated as above."
+end
+define CONFIG_FS_STREAM
+	default 0
+	export always
+	comment "Boot from a filesystem"
+end
+define CONFIG_FS_EXT2
+	default 0
+	export always
+	comment "Enable ext2 filesystem support"
+end
+define CONFIG_FS_ISO9660
+	default 0
+	export always
+	comment "Enable ISO9660 filesystem support"
+end
+define CONFIG_FS_FAT
+	default 0
+	export always
+	comment "Enable FAT filesystem support"
+end
+define AUTOBOOT_DELAY
+	default 2
+	export always
+	comment "Delay (in seconds) before autobooting"
+end
+define AUTOBOOT_CMDLINE
+	default "hdc1:/vmlinuz root=/dev/hdc3 console=tty0 console=ttyS0,115200"
+	export always
+	format "\"%s\""
+	comment "Default command line when autobooting"
+end
+
+define USE_WATCHDOG_ON_BOOT
+	default 0
+	export always
+	comment "Use the watchdog on booting"
+end
+
+###############################################
+# Plugin Device support options
+###############################################
+
+define CONFIG_HYPERTRANSPORT_PLUGIN_SUPPORT
+	default 1
+	export always
+	comment "Enable support for plugin Hypertransport busses"
+end
+define CONFIG_AGP_PLUGIN_SUPPORT
+	default 1
+	export always
+	comment "Enable support for plugin AGP busses"
+end
+define CONFIG_CARDBUS_PLUGIN_SUPPORT
+	default 1
+	export always
+	comment "Enable support cardbus plugin cards"
+end
+define CONFIG_PCIX_PLUGIN_SUPPORT
+	default 1
+	export always
+	comment "Enable support for plugin PCI-X busses"
+end
+define CONFIG_PCIEXP_PLUGIN_SUPPORT
+	default 1
+	export always
+	comment "Enable support for plugin PCI-E busses"
+end
+
+###############################################
+# IRQ options
+###############################################
+
+define HAVE_PIRQ_TABLE
+	default none
+	export used
+	comment "Define if we have a PIRQ table"
+end
+define IRQ_SLOT_COUNT
+	default none
+	export used
+	comment "Number of IRQ slots"
+end
+define CONFIG_PCIBIOS_IRQ
+	default none
+	export used
+	comment "PCIBIOS IRQ support"
+end
+define CONFIG_IOAPIC
+	default none
+	export used
+	comment "IOAPIC support"
+end
+
+###############################################
+# IDE specific options
+###############################################
+
+define CONFIG_IDE
+	default 0
+	export always
+	comment "Define to include IDE support"
+end
+define IDE_BOOT_DRIVE
+	default 0
+	export always
+	comment "Disk number of boot drive"
+end
+define IDE_SWAB
+	default none
+	export used
+	comment "Swap bytes when reading from IDE device"
+end
+define IDE_OFFSET
+	default 0
+	export always
+	comment "Sector at which to start searching for boot image"
+end
+
+###############################################
+# Options for memory mapped I/O
+###############################################
+
+define PCIC0_CFGADDR
+	default none
+	format "0x%x"
+	export used
+	comment "Address of PCI Configuration Address Register"
+end
+define PCIC0_CFGDATA
+	default none
+	format "0x%x"
+	export used
+	comment "Address of PCI Configuration Data Register"
+end
+define ISA_IO_BASE
+	default none
+	format "0x%x"
+	export used
+	comment "Base address of PCI/ISA I/O address range"
+end
+define ISA_MEM_BASE
+	default none
+	format "0x%x"
+	export used
+	comment "Base address of PCI/ISA memory address range"
+end
+define PNP_CFGADDR
+	default none
+	format "0x%x"
+	export used
+	comment "PNP Configuration Address Register offset"
+end
+define PNP_CFGDATA
+	default none
+	format "0x%x"
+	export used
+	comment "PNP Configuration Data Register offset"
+end
+define _IO_BASE
+	default none
+	format "0x%x"
+	export used
+	comment "Base address of memory mapped I/O operations"
+end
+
+###############################################
+# Options for embedded systems
+###############################################
+
+define EMBEDDED_RAM_SIZE
+	default none
+	export used
+	comment "Embedded boards generally have fixed RAM size"
+end
+
+###############################################
+# Misc options
+###############################################
+
+define CONFIG_CHIP_NAME
+	default 0
+	export always
+	comment "Compile in the chip name"
+end
+
+define CONFIG_GDB_STUB
+	default 0
+	export used
+	comment "Compile in gdb stub support?"
+end
+
+define HAVE_INIT_TIMER
+	default 0
+	export always
+	comment "Have a init_timer function"
+end
+define HAVE_HARD_RESET
+	default none
+	export used
+	comment "Have hard reset"
+end
+define MEMORY_HOLE
+	default none
+	export used
+	comment "Set to deal with memory hole"
+end
+define MAX_REBOOT_CNT
+	default 3
+	export always
+	comment "Set maximum reboots"
+end
+
+###############################################
+# Misc device options
+###############################################
+
+define CONFIG_TSC_X86RDTSC_CALIBRATE_WITH_TIMER2
+	default 0
+	export used
+	comment "Use timer2 to callibrate the x86 time stamp counter"
+end
+define INTEL_PPRO_MTRR
+	default none
+	export used
+	comment ""
+end
+define CONFIG_UDELAY_TSC
+	default 0
+	export used
+	comment "Implement udelay with the x86 time stamp counter"
+end
+define FAKE_SPDROM
+	default 0
+	export always
+	comment "Use this to fake spd rom values"
+end
+
+define HAVE_ACPI_TABLES
+	default 0
+	export always
+	comment "Define to build ACPI tables"
+end
+
+define AGP_APERTURE_SIZE
+	default none
+	export used
+	format "0x%x"
+	comment "AGP graphics virtual memory aperture size"
+end
+
+define CK804_DEVN_BASE
+	default 1
+	export always
+	comment "CK804 device count from 0 or 1"
+end
+
+define K8_E0_MEM_HOLE_SIZEK
+        default 0
+        export always
+        comment "Opteron E0 later memory hole size in K"
+end
+
+define CONFIG_PCI_ROM_RUN
+	default 0
+	export always
+	comment "Init PCI device option rom"
+end
+
+
+###############################################
+# Board specific options
+###############################################
+
+###############################################
+# Options for motorola/sandpoint
+###############################################
+define CONFIG_SANDPOINT_ALTIMUS
+	default 0
+	export never
+	comment "Configure Sandpoint with Altimus PMC"
+end
+define CONFIG_SANDPOINT_TALUS
+	default 0
+	export never
+	comment "Configure Sandpoint with Talus PMC"
+end
+define CONFIG_SANDPOINT_UNITY
+	default 0
+	export never
+	comment "Configure Sandpoint with Unity PMC"
+end
+define CONFIG_SANDPOINT_VALIS
+	default 0
+	export never
+	comment "Configure Sandpoint with Valis PMC"
+end
+define CONFIG_SANDPOINT_GYRUS
+	default 0
+	export never
+	comment "Configure Sandpoint with Gyrus PMC"
+end
+
+###############################################
+# Options for totalimpact/briq
+###############################################
+define CONFIG_BRIQ_750FX
+	default 0
+	export never
+	comment "Configure briQ with PowerPC 750FX"
+end
+define CONFIG_BRIQ_7400
+	default 0
+	export never
+	comment "Configure briQ with PowerPC G4"
+end

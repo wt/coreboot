@@ -1,0 +1,3 @@
+config chip.h
+object sc520.o
+
