@@ -1,8 +1,0 @@
-uses HAVE_MP_TABLE
-
-if HAVE_MP_TABLE
-  object mpspec.o 
-end
-#object ioapic.o CONFIG_IOAPIC
-
-
