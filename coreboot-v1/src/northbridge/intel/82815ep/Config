@@ -1,4 +1,0 @@
-raminit northbridge/intel/815ep/raminit.inc
-raminit sdram/generic_sdram.inc
-
-object northbridge.o

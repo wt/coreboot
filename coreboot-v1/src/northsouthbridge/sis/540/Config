@@ -1,6 +1,0 @@
-option SIS540
-option SMA_SIZE=0x90
-raminit northsouthbridge/sis/540/raminit.inc
-
-object southbridge.o
-object northbridge.o

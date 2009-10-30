@@ -1,5 +1,0 @@
-option SIS735
-raminit northsouthbridge/sis/735/raminit.inc
-
-object southbridge.o
-object northbridge.o

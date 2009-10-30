@@ -1,4 +1,0 @@
-object netboot.o
-object rarp.o
-object sis900.o
-object timer.o

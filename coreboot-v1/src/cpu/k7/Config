@@ -1,3 +1,0 @@
-option k7=1
-option CPU_FIXUP=1
-object cpufixup.o

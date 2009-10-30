@@ -1,9 +1,0 @@
-arch alpha
-northbridge alpha/tsunami
-southbridge acer/m1543
-#southbridge...
-#superio...
-
-
-object mainboard.o
-option _RAMBASE=0x200000

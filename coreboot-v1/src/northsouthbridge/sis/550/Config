@@ -1,6 +1,0 @@
-option SIS550
-option SMA_SIZE=0xA0
-raminit northsouthbridge/sis/550/raminit.inc
-
-object southbridge.o
-object northbridge.o

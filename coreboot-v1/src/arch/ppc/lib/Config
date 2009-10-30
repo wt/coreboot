@@ -1,7 +1,0 @@
-object c_start.S
-object setup.o
-object id.o
-object timer.o
-object timebase.S
-object floats.S
-
