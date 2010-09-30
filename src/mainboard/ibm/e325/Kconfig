@@ -21,18 +21,6 @@ config MAINBOARD_DIR
 	string
 	default ibm/e325
 
-config DCACHE_RAM_BASE
-	hex
-	default 0xcf000
-
-config DCACHE_RAM_SIZE
-	hex
-	default 0x1000
-
-config DCACHE_RAM_GLOBAL_VAR_SIZE
-	hex
-	default 0x0
-
 config APIC_ID_OFFSET
 	hex
 	default 0x0
