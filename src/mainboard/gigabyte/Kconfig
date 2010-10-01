@@ -21,6 +21,8 @@ if VENDOR_GIGABYTE
 choice
 	prompt "Mainboard model"
 
+config BOARD_GIGABYTE_EX58_UD4P
+	bool "EX58_UD4P"
 config BOARD_GIGABYTE_GA_2761GXDK
 	bool "GA-2761GXDK"
 config BOARD_GIGABYTE_GA_6BXC
@@ -36,6 +38,7 @@ config BOARD_GIGABYTE_MA78GM
 
 endchoice
 
+source "src/mainboard/gigabyte/ex58-ud4p/Kconfig"
 source "src/mainboard/gigabyte/ga_2761gxdk/Kconfig"
 source "src/mainboard/gigabyte/ga-6bxc/Kconfig"
 source "src/mainboard/gigabyte/ga-6bxe/Kconfig"

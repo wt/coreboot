@@ -1,0 +1,16 @@
+chip northbridge/intel/core_i7/root_complex
+	device lapic_cluster 0 on
+		chip cpu/intel/socket_LGA1366
+			device lapic 0 on end
+		end
+	end
+
+	device pci_domain 0 on
+		chip northbridge/intel/core_i7
+#			chip southbridge/intel/x58
+#			end
+			chip southbridge/intel/i82801jir
+			end
+		end
+	end
+end

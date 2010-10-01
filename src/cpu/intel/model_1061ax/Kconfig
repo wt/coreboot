@@ -1,0 +1,6 @@
+config CPU_INTEL_CORE_I7_920
+	bool
+	select SMP
+	select SSE2
+	select UDELAY_LAPIC
+	select AP_IN_SIPI_WAIT

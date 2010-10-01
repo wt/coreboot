@@ -1,0 +1,62 @@
+if BOARD_GIGABYTE_EX58_UD4P
+
+config BOARD_SPECIFIC_OPTIONS # dummy
+	def_bool y
+	select ARCH_X86
+	select CPU_INTEL_CORE_I7_920
+	select CPU_INTEL_SOCKET_LGA1366
+	select NORTHBRIDGE_INTEL_CORE_I7
+	select SOUTHBRIDGE_INTEL_I82801JIR
+	select SOUTHBRIDGE_INTEL_X58
+	select SUPERIO_WINBOND_W83627THG
+	select BOARD_HAS_FADT
+#	select GENERATE_ACPI_TABLES
+	select GENERATE_PIRQ_TABLE
+	select GENERATE_MP_TABLE
+	select HAVE_OPTION_TABLE
+#	select HAVE_HARD_RESET
+#	select HAVE_ACPI_RESUME
+	select MMCONF_SUPPORT
+#	select HAVE_SMI_HANDLER
+	select BOARD_ROMSIZE_KB_1024
+	select CACHE_AS_RAM
+	select GFXUMA
+	select TINY_BOOTBLOCK
+
+config MAINBOARD_DIR
+	string
+	default gigabyte/ex58-ud4p
+
+config DCACHE_RAM_BASE
+	hex
+	default 0xffdf8000
+
+config DCACHE_RAM_SIZE
+	hex
+	default 0x10000
+
+config MAINBOARD_PART_NUMBER
+	string
+	default "EX58-UD4P"
+
+config MMCONF_BASE_ADDRESS
+	hex
+	default 0xf0000000
+
+config IRQ_SLOT_COUNT
+	int
+	default 18
+
+config MAX_CPUS
+	int
+	default 4
+
+config MAX_PHYSICAL_CPUS
+	int
+	default 2
+
+config FALLBACK_VGA_BIOS_FILE
+	string
+	default "amipci_01.20"
+
+endif # BOARD_GIGABYTE_EX58_UD4P
