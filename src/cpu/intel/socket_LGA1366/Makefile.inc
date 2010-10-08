@@ -1,5 +1,5 @@
 ramstage-y += socket_LGA1366.c
-subdirs-y += ../model_1061ax
+subdirs-y += ../model_106ax
 subdirs-y += ../../x86/tsc
 subdirs-y += ../../x86/mtrr
 subdirs-y += ../../x86/lapic

@@ -200,7 +200,7 @@ static void configure_pic_thermal_sensors(void)
 static unsigned ehci_debug_addr;
 #endif
 
-static void model_1061ax_init(device_t cpu)
+static void model_106ax_init(device_t cpu)
 {
 	char processor_name[49];
 
@@ -252,11 +252,11 @@ static void model_1061ax_init(device_t cpu)
 }
 
 static struct device_operations cpu_dev_ops = {
-	.init     = model_1061ax_init,
+	.init     = model_106ax_init,
 };
 
 static struct cpu_device_id cpu_table[] = {
-	{ X86_VENDOR_INTEL, 0x1061a4 }, /* Intel Core i7 920 */
+	{ X86_VENDOR_INTEL, 0x106a4 }, /* Intel Core i7 920 */
 	{ 0, 0 },
 };
 
