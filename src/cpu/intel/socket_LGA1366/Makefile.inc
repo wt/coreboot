@@ -9,3 +9,4 @@ subdirs-y += ../microcode
 subdirs-y += ../hyperthreading
 subdirs-y += ../speedstep
 
+cpu_incs += $(src)/cpu/intel/car/cache_as_ram.inc
