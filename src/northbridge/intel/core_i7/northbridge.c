@@ -32,7 +32,7 @@
 #include <boot/tables.h>
 #include "chip.h"
 #include "root_complex/chip.h"
-#include "i945.h"
+#include "core_i7.h"
 #include <reset.h>
 
 static int get_pcie_bar(u32 *base, u32 *len)

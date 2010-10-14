@@ -22,7 +22,7 @@
 #include <pc80/mc146818rtc.h>
 #include <spd.h>
 #include "raminit.h"
-#include "i945.h"
+#include "core_i7.h"
 
 /* Debugging macros. */
 #if CONFIG_DEBUG_RAM_SETUP
@@ -1264,7 +1264,7 @@ static void sdram_force_rcomp(void)
 	reg32 |= (1 << 8);
 	MCHBAR32(GBRCOMPCTL) = reg32;
 
-	reg8 = i945_silicon_revision();
+	reg8 = core_i7_silicon_revision();
 	if ((reg8 == 0 && (MCHBAR32(DCC) & (3 << 0)) == 0) || (reg8 == 1)) {
 
 		reg32 = MCHBAR32(GBRCOMPCTL);
@@ -2009,7 +2009,7 @@ static void sdram_program_graphics_frequency(struct sys_info *sysinfo)
 	case CRCLK_400MHz: printk(BIOS_DEBUG, "400Mhz"); break;
 	}
 
-	if (i945_silicon_revision() == 0) {
+	if (core_i7_silicon_revision() == 0) {
 		sysinfo->mvco4x = 1;
 	} else {
 		sysinfo->mvco4x = 0;
@@ -2019,7 +2019,7 @@ static void sdram_program_graphics_frequency(struct sys_info *sysinfo)
 
 	if (voltage == VOLTAGE_1_50) {
 		second_vco = 1;
-	} else if ((i945_silicon_revision() > 0) && (freq == CRCLK_250MHz))  {
+	} else if ((core_i7_silicon_revision() > 0) && (freq == CRCLK_250MHz))  {
 		u16 mem = sysinfo->memory_frequency;
 		u16 fsb = sysinfo->fsb_frequency;
 
@@ -2476,7 +2476,7 @@ static void sdram_power_management(struct sys_info *sysinfo)
 	reg32 |= (1 << 12) | (1 << 11);
 	MCHBAR32(C1DRC1) = reg32;
 
-	if (i945_silicon_revision()>1) {
+	if (core_i7_silicon_revision()>1) {
 		/* FIXME bits 5 and 0 only if PCIe graphics is disabled */
 		u16 peg_bits = (1 << 5) | (1 << 0);
 
@@ -2505,7 +2505,7 @@ static void sdram_power_management(struct sys_info *sysinfo)
 
 	reg16 = MCHBAR16(CPCTL);
 	reg16 &= ~(7 << 11);
-	if (i945_silicon_revision()>2) {
+	if (core_i7_silicon_revision()>2) {
 		reg16 |= (6 << 11);
 	} else {
 		reg16 |= (4 << 11);
@@ -2515,7 +2515,7 @@ static void sdram_power_management(struct sys_info *sysinfo)
 #if 0
 	if ((MCHBAR32(ECO) & (1 << 16)) != 0) {
 #else
-	if (i945_silicon_revision() != 0) {
+	if (core_i7_silicon_revision() != 0) {
 #endif
 		switch (sysinfo->fsb_frequency) {
 		case 667: MCHBAR32(HGIPMC2) = 0x0d590d59; break;
@@ -2546,7 +2546,7 @@ static void sdram_power_management(struct sys_info *sysinfo)
 	}
 	MCHBAR32(C3C4TT) = reg32;
 
-	if (i945_silicon_revision() == 0) {
+	if (core_i7_silicon_revision() == 0) {
 		MCHBAR32(ECO) &= ~(1 << 16);
 	} else {
 		MCHBAR32(ECO) |= (1 << 16);
@@ -2554,7 +2554,7 @@ static void sdram_power_management(struct sys_info *sysinfo)
 
 #if 0
 
-	if (i945_silicon_revision() == 0) {
+	if (core_i7_silicon_revision() == 0) {
 		MCHBAR32(FSBPMC3) &= ~(1 << 29);
 	} else {
 		MCHBAR32(FSBPMC3) |= (1 << 29);
@@ -2577,7 +2577,7 @@ static void sdram_power_management(struct sys_info *sysinfo)
 
 	MCHBAR32(FSBPMC4) |= (1 << 5);
 
-	if ((i945_silicon_revision() < 2) /* || cpuid() = 0x6e8 */ ) {
+	if ((core_i7_silicon_revision() < 2) /* || cpuid() = 0x6e8 */ ) {
 		/* stepping 0 and 1 or CPUID 6e8 */
 		MCHBAR32(FSBPMC4) &= ~(1 << 4);
 	} else {
@@ -3018,12 +3018,12 @@ static void sdram_init_complete(void)
 
 static void sdram_setup_processor_side(void)
 {
-	if (i945_silicon_revision() == 0)
+	if (core_i7_silicon_revision() == 0)
 		MCHBAR32(FSBPMC3) |= (1 << 2);
 
 	MCHBAR8(0xb00) |= 1;
 
-	if (i945_silicon_revision() == 0)
+	if (core_i7_silicon_revision() == 0)
 		MCHBAR32(SLPCTL) |= (1 << 8);
 }
 

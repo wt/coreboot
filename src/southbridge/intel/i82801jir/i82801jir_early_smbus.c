@@ -21,7 +21,7 @@
 
 #include <device/pci_ids.h>
 #include "i82801jir.h"
-#include "i82801gx_smbus.h"
+#include "i82801jir_smbus.h"
 
 static void enable_smbus(void)
 {
@@ -31,7 +31,7 @@ static void enable_smbus(void)
 	dev = PCI_DEV(0x0, 0x1f, 0x3);
 
 	/* Check to make sure we've got the right device. */
-	if (pci_read_config16(dev, 0x2) != 0x27da) {
+	if (pci_read_config16(dev, 0x2) != 0x3a60) {
 		die("SMBus controller not found!");
 	}
 

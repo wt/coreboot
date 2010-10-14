@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#include "i945.h"
+#include "core_i7.h"
 
 static inline __attribute__ ((always_inline))
 u8 pcie_read_config8(device_t dev, unsigned int where)

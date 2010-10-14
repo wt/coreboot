@@ -50,23 +50,24 @@
 #if CONFIG_USBDEBUG
 #define DBGP_DEFAULT 1
 #include <usbdebug.h>
-#include "southbridge/intel/i82801gx/i82801gx_usb_debug.c"
+#include "southbridge/intel/i82801jir/i82801jir_usb_debug.c"
 #include "pc80/usbdebug_serial.c"
 #endif
 
 //#include "lib/ramtest.c"
 #include "lib.h"
-#include "southbridge/intel/i82801gx/i82801gx_early_smbus.c"
-#include "superio/winbond/w83627thg/w83627thg_early_serial.c"
+#include "southbridge/intel/i82801jir/i82801jir_early_smbus.c"
+//#include "superio/winbond/w83627thg/w83627thg_early_serial.c"
 
 #include "northbridge/intel/core_i7/udelay.c"
 
-#define SERIAL_DEV PNP_DEV(0x2e, W83627THG_SP1)
+//#define SERIAL_DEV PNP_DEV(0x2e, W83627THG_SP1)
 
-#include "southbridge/intel/i82801gx/i82801gx.h"
-static void setup_ich7_gpios(void)
+#include "southbridge/intel/i82801jir/i82801jir.h"
+static void setup_ich10_gpios(void)
 {
 	printk(BIOS_DEBUG, " GPIOS...");
+#if 0
 	/* General Registers */
 	outl(0x1f1ff7c0, DEFAULT_GPIOBASE + 0x00);	/* GPIO_USE_SEL */
 	outl(0xe0e8efc3, DEFAULT_GPIOBASE + 0x04);	/* GP_IO_SEL */
@@ -78,6 +79,7 @@ static void setup_ich7_gpios(void)
 	outl(0x000100ff, DEFAULT_GPIOBASE + 0x30);	/* GPIO_USE_SEL2 */
 	outl(0x00000030, DEFAULT_GPIOBASE + 0x34);	/* GP_IO_SEL2 */
 	outl(0x00010035, DEFAULT_GPIOBASE + 0x38);	/* GP_LVL */
+#endif
 }
 
 #include "northbridge/intel/core_i7/early_init.c"
@@ -92,8 +94,9 @@ static inline int spd_read_byte(unsigned device, unsigned address)
 #include "northbridge/intel/core_i7/errata.c"
 #include "northbridge/intel/core_i7/debug.c"
 
-static void ich7_enable_lpc(void)
+static void ich10_enable_lpc(void)
 {
+#if 0
 	// Enable Serial IRQ
 	pci_write_config8(PCI_DEV(0, 0x1f, 0), 0x64, 0xd0);
 	// Set COM1/COM2 decode range
@@ -106,6 +109,8 @@ static void ich7_enable_lpc(void)
 	pci_write_config32(PCI_DEV(0, 0x1f, 0), 0x88, 0x000403e9);
 	// COM4 decode
 	pci_write_config32(PCI_DEV(0, 0x1f, 0), 0x8c, 0x000402e9);
+#endif
+
 	// io 0x300 decode
 	pci_write_config32(PCI_DEV(0, 0x1f, 0), 0x90, 0x00000301);
 }
@@ -117,6 +122,7 @@ static void ich7_enable_lpc(void)
  */
 static void early_superio_config_w83627thg(void)
 {
+#if 0
 	device_t dev;
 
 	dev=PNP_DEV(0x2e, W83627THG_SP1);
@@ -215,68 +221,49 @@ static void early_superio_config_w83627thg(void)
 	pnp_set_iobase(dev, PNP_IDX_IO1, 0x00);
 
 	pnp_exit_ext_func_mode(dev);
+#endif
 }
 
 static void rcba_config(void)
 {
-	u32 reg32;
+	//u32 reg32;
 
 	/* Set up virtual channel 0 */
-	//RCBA32(0x0014) = 0x80000001;
-	//RCBA32(0x001c) = 0x03128010;
+	RCBA32(0x0014) = 0x80000001;
+	RCBA32(0x001c) = 0x03128010;
 
 	/* Device 1f interrupt pin register */
-	RCBA32(0x3100) = 0x00042210;
+	RCBA32(0x3100) = 0x03243200;
+	/* Device 1e interrupt pin register */
+	RCBA32(0x3108) = 0x10004321;
 	/* Device 1d interrupt pin register */
 	RCBA32(0x310c) = 0x00214321;
 
 	/* dev irq route register */
-	RCBA16(0x3140) = 0x0132;
-	RCBA16(0x3142) = 0x3241;
-	RCBA16(0x3144) = 0x0237;
+//	RCBA16(0x3140) = 0x0132;
+//	RCBA16(0x3142) = 0x3241;
+//	RCBA16(0x3144) = 0x0237;
+//	RCBA16(0x3146) = 0x3210;
+//	RCBA16(0x3148) = 0x3210;
+	RCBA16(0x3140) = 0x3210;
+//	RCBA16(0x3142) = 0x0000;
+	RCBA16(0x3144) = 0x3210;
 	RCBA16(0x3146) = 0x3210;
 	RCBA16(0x3148) = 0x3210;
+	RCBA16(0x314c) = 0x3210;
+	RCBA16(0x3150) = 0x3210;
 
 	/* Enable IOAPIC */
-	RCBA8(0x31ff) = 0x03;
+	//RCBA8(0x31ff) = 0x03;
+	RCBA8(0x31ff) = (1 << 0);
 
 	/* Enable upper 128bytes of CMOS */
 	RCBA32(0x3400) = (1 << 2);
-
-	/* Now, this is a bit ugly. As per PCI specification, function 0 of a
-	 * device always has to be implemented. So disabling ethernet port 1
-	 * would essentially disable all three ethernet ports of the mainboard.
-	 * It's possible to rename the ports to achieve compatibility to the
-	 * PCI spec but this will confuse all (static!) tables containing
-	 * interrupt routing information.
-	 * To avoid this, we enable (unused) port 6 and swap it with port 1
-	 * in the case that ethernet port 1 is disabled. Since no devices
-	 * are connected to that port, we don't have to worry about interrupt
-	 * routing.
-	 */
-	int port_shuffle = 0;
-
-	/* Disable unused devices */
-	reg32 = FD_ACMOD|FD_ACAUD|FD_PATA;
-	reg32 |= FD_PCIE6|FD_PCIE5|FD_PCIE4;
-
-	if (port_shuffle) {
-		/* Enable PCIE6 again */
-		reg32 &= ~FD_PCIE6;
-		/* Swap PCIE6 and PCIE1 */
-		RCBA32(RPFN) = 0x00043215;
-	}
-
-	reg32 |= 1;
-
-	RCBA32(0x3418) = reg32;
-
-	/* Enable PCIe Root Port Clock Gate */
-	// RCBA32(0x341c) = 0x00000001;
 }
 
-static void early_ich7_init(void)
+static void early_ich10_init(void)
 {
+#if 0
 	uint8_t reg8;
 	uint32_t reg32;
 
@@ -327,6 +314,7 @@ static void early_ich7_init(void)
 	reg32 &= ~(0x0f << 16);
 	reg32 |= (5 << 16);
 	RCBA32(0x2034) = reg32;
+#endif
 }
 
 #include <cbmem.h>
@@ -341,8 +329,8 @@ static void early_ich7_init(void)
 
 void main(unsigned long bist)
 {
-	u32 reg32;
-	int boot_mode = 0;
+//	u32 reg32;
+//	int boot_mode = 0;
 
 	if (bist == 0) {
 		enable_lapic();
@@ -353,33 +341,41 @@ void main(unsigned long bist)
 	udelay(200 * 1000);
 	pci_write_config16(PCI_DEV(0, 0x1e, 0), BCTRL, 0);
 
-	ich7_enable_lpc();
+	ich10_enable_lpc();
+
 	early_superio_config_w83627thg();
 
+#if 0
 	/* Set up the console */
 	uart_init();
 
 #if CONFIG_USBDEBUG
-	i82801gx_enable_usbdebug(DBGP_DEFAULT);
+	i82801jir_enable_usbdebug(DBGP_DEFAULT);
 	early_usbdebug_init();
 #endif
 
 	console_init();
+#endif
 
 	/* Halt if there was a built in self test failure */
 	report_bist_failure(bist);
 
+#if 0
 	if (MCHBAR16(SSKPD) == 0xCAFE) {
 		printk(BIOS_DEBUG, "soft reset detected, rebooting properly\n");
 		outb(0x6, 0xcf9);
 		while (1) asm("hlt");
 	}
+#endif
 
 	/* Perform some early chipset initialization required
 	 * before RAM initialization can work
 	 */
-	i945_early_initialization();
+	core_i7_early_initialization();
 
+	do {} while(1);
+
+#if 0
 	/* Read PM1_CNT */
 	reg32 = inl(DEFAULT_PMBASE + 0x04);
 	printk(BIOS_DEBUG, "PM1_CNT: %08x\n", reg32);
@@ -396,30 +392,36 @@ void main(unsigned long bist)
 		printk(BIOS_DEBUG, "Resume from S3 detected, but disabled.\n");
 #endif
 	}
+#endif
 
 	/* Enable SPD ROMs and DDR-II DRAM */
 	enable_smbus();
 
+#if 0
 #if CONFIG_DEFAULT_CONSOLE_LOGLEVEL > 8
 	dump_spd_registers();
 #endif
 
 	sdram_initialize(boot_mode);
+#endif
 
 	/* Perform some initialization that must run before stage2 */
-	early_ich7_init();
+	early_ich10_init();
 
 	/* This should probably go away. Until now it is required
 	 * and mainboard specific
 	 */
 	rcba_config();
 
+#if 0
 	/* Chipset Errata! */
 	fixup_i945_errata();
+#endif
 
 	/* Initialize the internal PCIe links before we go into stage2 */
-	i945_late_initialization();
+	core_i7_late_initialization();
 
+#if 0
 #if !CONFIG_HAVE_ACPI_RESUME
 #if CONFIG_DEFAULT_CONSOLE_LOGLEVEL > 8
 #if CONFIG_DEBUG_RAM_SETUP
@@ -463,5 +465,7 @@ void main(unsigned long bist)
 		pci_write_config32(PCI_DEV(0, 0x00, 0), SKPAD, 0xcafed00d);
 	}
 #endif
+#endif
+
 }
 

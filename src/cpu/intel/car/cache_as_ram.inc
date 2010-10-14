@@ -315,6 +315,8 @@ clear_fixed_var_mtrr_out:
 .xout1x:
 #endif
 
+	post_code(0xff)
+
 	movl	$(CacheBase + CacheSize - 4), %eax
 	movl	%eax, %esp
 lout:

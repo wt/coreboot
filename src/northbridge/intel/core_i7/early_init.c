@@ -17,15 +17,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
-#include "i945.h"
+#include "core_i7.h"
 #include "pcie_config.c"
 
-static int i945_silicon_revision(void)
+static int core_i7_silicon_revision(void)
 {
 	return pci_read_config8(PCI_DEV(0, 0x00, 0), PCI_CLASS_REVISION);
 }
 
-static void i945m_detect_chipset(void)
+#if 0
+static void core_i7m_detect_chipset(void)
 {
 	u8 reg8;
 
@@ -87,7 +88,7 @@ static void i945m_detect_chipset(void)
 	printk(BIOS_DEBUG, "\n");
 }
 
-static void i945_detect_chipset(void)
+static void core_i7_detect_chipset(void)
 {
 	u8 reg8;
 
@@ -132,14 +133,17 @@ static void i945_detect_chipset(void)
 	}
 	printk(BIOS_DEBUG, "\n");
 }
+#endif
 
-static void i945_setup_bars(void)
+static void core_i7_setup_bars(void)
 {
+#if 0
 	u8 reg8;
 
 	/* As of now, we don't have all the A0 workarounds implemented */
-	if (i945_silicon_revision() == 0)
-		printk(BIOS_INFO, "Warning: i945 silicon revision A0 might not work correctly.\n");
+	if (core_i7_silicon_revision() == 0)
+		printk(BIOS_INFO, "Warning: core_i7 silicon revision A0 might not work correctly.\n");
+#endif
 
 	/* Setting up Southbridge. In the northbridge code. */
 	printk(BIOS_DEBUG, "Setting up static southbridge registers...");
@@ -150,7 +154,7 @@ static void i945_setup_bars(void)
 
 	pci_write_config32(PCI_DEV(0, 0x1f, 0), GPIOBASE, DEFAULT_GPIOBASE | 1);
 	pci_write_config8(PCI_DEV(0, 0x1f, 0), 0x4c /* GC */ , 0x10);	/* Enable GPIOs */
-	setup_ich7_gpios();
+	setup_ich10_gpios();
 	printk(BIOS_DEBUG, " done.\n");
 
 	printk(BIOS_DEBUG, "Disabling Watchdog reboot...");
@@ -158,6 +162,7 @@ static void i945_setup_bars(void)
 	outw((1 << 11), DEFAULT_PMBASE | 0x60 | 0x08);	/* halt timer */
 	printk(BIOS_DEBUG, " done.\n");
 
+#if 0
 	printk(BIOS_DEBUG, "Setting up static northbridge registers...");
 	/* Set up all hardcoded northbridge BARs */
 	pci_write_config32(PCI_DEV(0, 0x00, 0), EPBAR, DEFAULT_EPBAR | 1);
@@ -191,9 +196,10 @@ static void i945_setup_bars(void)
 		} while (!(reg8 & 0x80));
 	}
 	printk(BIOS_DEBUG, "ok\n");
+#endif
 }
 
-static void i945_setup_egress_port(void)
+static void core_i7_setup_egress_port(void)
 {
 	u32 reg32;
 	u32 timeout;
@@ -340,7 +346,7 @@ static void ich7_setup_dmi_rcrb(void)
 	RCBA32(LCAP) |= (3 << 10);
 }
 
-static void i945_setup_dmi_rcrb(void)
+static void core_i7_setup_dmi_rcrb(void)
 {
 	u32 reg32;
 	u32 timeout;
@@ -449,7 +455,7 @@ static void i945_setup_dmi_rcrb(void)
 	DMIBAR32(DMIDRCCFG) &= ~(1 << 31);
 	DMIBAR32(DMICTL2) |= (1 << 31);
 
-	if (i945_silicon_revision() >= 3) {
+	if (core_i7_silicon_revision() >= 3) {
 		reg32 = DMIBAR32(0xec0);
 		reg32 &= 0x0fffffff;
 		reg32 |= (2 << 28);
@@ -493,7 +499,7 @@ static void i945_setup_dmi_rcrb(void)
 	DMIBAR32(0x338) = DMIBAR32(0x334);
 	DMIBAR32(0x338) = DMIBAR32(0x338);
 
-	if (i945_silicon_revision() == 1 && ((MCHBAR8(0xe08) & (1 << 5)) == 1)) {
+	if (core_i7_silicon_revision() == 1 && ((MCHBAR8(0xe08) & (1 << 5)) == 1)) {
 		if ((MCHBAR32(0x214) & 0xf) != 0x3) {
 			printk(BIOS_INFO, "DMI link requires A1 stepping workaround. Rebooting.\n");
 			reg32 = DMIBAR32(0x224);
@@ -506,7 +512,7 @@ static void i945_setup_dmi_rcrb(void)
 	}
 }
 
-static void i945_setup_pci_express_x16(void)
+static void core_i7_setup_pci_express_x16(void)
 {
 	u32 timeout;
 	u32 reg32;
@@ -525,7 +531,7 @@ static void i945_setup_pci_express_x16(void)
 	pcie_write_config32(PCI_DEV(0, 0x01, 0), 0x208, reg32);
 
 	/* We have no success with querying the usual PCIe registers
-	 * for link setup success on the i945. Hence we assign a temporary
+	 * for link setup success on the core_i7. Hence we assign a temporary
 	 * PCI bus 0x0a and check whether we find a device on 0:a.0
 	 */
 
@@ -714,7 +720,7 @@ static void i945_setup_pci_express_x16(void)
 	pcie_write_config32(PCI_DEV(0, 0x01, 0), 0x200, reg32);
 
 	reg32 = pcie_read_config32(PCI_DEV(0, 0x01, 0), 0xe80);
-	if (i945_silicon_revision() >= 2) {
+	if (core_i7_silicon_revision() >= 2) {
 		reg32 |= (1 << 12);
 	} else {
 		reg32 &= ~(1 << 12);
@@ -729,7 +735,7 @@ static void i945_setup_pci_express_x16(void)
 	reg32 |= (1 << 31);
 	pcie_write_config32(PCI_DEV(0, 0x01, 0), 0xfc, reg32);
 
-	if (i945_silicon_revision() >= 3) {
+	if (core_i7_silicon_revision() >= 3) {
 		static const u32 reglist[] = {
 			0xec0, 0xed4, 0xee8, 0xefc, 0xf10, 0xf24,
 			0xf38, 0xf4c, 0xf60, 0xf74, 0xf88, 0xf9c,
@@ -745,7 +751,7 @@ static void i945_setup_pci_express_x16(void)
 		}
 	}
 
-	if (i945_silicon_revision() <= 2 ) {
+	if (core_i7_silicon_revision() <= 2 ) {
 		/* Set voltage specific parameters */
 		reg32 = pcie_read_config32(PCI_DEV(0, 0x01, 0), 0xe80);
 		reg32 &= (0xf << 4);	/* Default case 1.05V */
@@ -790,7 +796,7 @@ disable_pciexpress_x16_link:
 	pci_write_config16(PCI_DEV(0, 0x00, 0), DEVEN, reg16);
 }
 
-static void i945_setup_root_complex_topology(void)
+static void core_i7_setup_root_complex_topology(void)
 {
 	u32 reg32;
 
@@ -856,32 +862,36 @@ static void ich7_setup_pci_express(void)
 	pci_write_config32(PCI_DEV(0, 0x1c, 0), 0xd8, 0x00110000);
 }
 
-static void i945_early_initialization(void)
+static void core_i7_early_initialization(void)
 {
+#if 0
 	/* Print some chipset specific information */
 	switch (pci_read_config32(PCI_DEV(0, 0x00, 0), 0)) {
 	case 0x27708086: /* 82945G/GZ/GC/P/PL */
-		i945_detect_chipset();
+		core_i7_detect_chipset();
 		break;
 	case 0x27a08086: /* 945GME/GSE */
 	case 0x27ac8086: /* 945GM/PM/GMS/GU/GT, 943/940GML */
-		i945m_detect_chipset();
+		core_i7m_detect_chipset();
 		break;
 	}
+#endif
 
 	/* Setup all BARs required for early PCIe and raminit */
-	i945_setup_bars();
+	core_i7_setup_bars();
 
 	/* Change port80 to LPC */
 	RCBA32(GCS) &= (~0x04);
 
+#if 0
 	/* Just do it that way */
 	RCBA32(0x2010) |= (1 << 10);
+#endif
 }
 
-static void i945_late_initialization(void)
+static void core_i7_late_initialization(void)
 {
-	i945_setup_egress_port();
+	core_i7_setup_egress_port();
 
 	ich7_setup_root_complex_topology();
 
@@ -889,10 +899,9 @@ static void i945_late_initialization(void)
 
 	ich7_setup_dmi_rcrb();
 
-	i945_setup_dmi_rcrb();
+	core_i7_setup_dmi_rcrb();
 
-	i945_setup_pci_express_x16();
+	core_i7_setup_pci_express_x16();
 
-	i945_setup_root_complex_topology();
+	core_i7_setup_root_complex_topology();
 }
-

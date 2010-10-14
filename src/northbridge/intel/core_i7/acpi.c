@@ -27,7 +27,7 @@
 #include <device/device.h>
 #include <device/pci.h>
 #include <device/pci_ids.h>
-#include "i945.h"
+#include "core_i7.h"
 
 unsigned long acpi_fill_mcfg(unsigned long current)
 {

@@ -19,7 +19,7 @@
 
 #include "raminit.h"
 
-int fixup_i945_errata(void)
+int fixup_core_i7_errata(void)
 {
 	u32 reg32;
 
